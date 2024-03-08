@@ -57,7 +57,7 @@ pub trait Executable {
 
 /// Default counter application example.
 /// Just plug it into a [`Program`] and run it.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub struct App {
     /// Is the application running?
     pub running: bool,
@@ -71,7 +71,7 @@ Default example of a program using the [`ratatui`] library.
 It contains an [`App`] struct that contains the data for the application
 and also implements the [`Renderer`], [`KeyEventHandler`], [`Executable`] traits.
 */
-pub struct Program<T: Renderer + KeyEventHandler + Executable> {
+pub struct Program<T: Renderer + KeyEventHandler + Executable + Clone> {
     app: T,
 }
 
