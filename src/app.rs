@@ -1,11 +1,8 @@
 use crossterm::event::{KeyCode, KeyEvent as CrosstermKeyEvent, KeyModifiers};
-use ratatui::{
-    layout::Alignment,
-    style::{Color, Style},
-    widgets::{Block, BorderType, Paragraph},
+use ratatui::{layout::Alignment, style::{Color, Style}, widgets::{Block, BorderType, Paragraph}
 };
 
-use crate::App;
+use crate::{App, CrosstermBackend, Event, Tui};
 
 use super::{AppResult, Executable, KeyEventHandler, Renderer};
 
@@ -13,6 +10,7 @@ impl Default for App {
     fn default() -> Self {
         Self {
             running: true,
+            do_print: true,
             counter: 0,
         }
     }
@@ -94,6 +92,20 @@ impl Executable for App {
     /// Is the app running?
     fn is_running(&self) -> bool {
         self.running
+    }
+
+    async fn run(&mut self, tui: &mut Tui<CrosstermBackend>) -> AppResult<bool>{
+        while self.is_running() {
+            tui.draw(self)?;
+
+            match tui.events.next().await? {
+                Event::Tick => self.tick(),
+                Event::Key(ke) => self.handle_key_event(ke)?,
+                Event::Mouse(_) => (),
+                Event::Resize(_, _) => (),
+            }
+        }
+        Ok(self.do_print)
     }
     
     /// Set running to false to quit the application.

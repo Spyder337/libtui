@@ -1,7 +1,8 @@
 use std::error;
 
-use crossterm::event::{KeyEvent as CrosstermKeyEvent, MouseEvent};
-use ratatui::{backend::Backend, Terminal};
+use crossterm::event::{ KeyEvent as CrosstermKeyEvent, MouseEvent };
+use ratatui::{ backend::Backend, Terminal };
+use serde::{ Deserialize, Serialize };
 use tokio::sync::mpsc;
 
 pub mod app;
@@ -11,6 +12,7 @@ pub mod tui;
 
 /// Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
+pub type CrosstermBackend = ratatui::backend::CrosstermBackend<std::io::Stderr>;
 
 /// Terminal events.
 #[derive(Clone, Copy, Debug)]
@@ -49,17 +51,21 @@ pub trait Executable {
     fn is_running(&self) -> bool;
     fn quit(&mut self);
     fn tick(&self) {}
+    fn run(
+        &mut self,
+        tui: &mut Tui<CrosstermBackend>
+    ) -> impl std::future::Future<Output = AppResult<bool>> + Send;
 }
-
 
 /// Default counter application example.
 /// Just plug it into a [`Program`] and run it.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct App {
     /// Is the application running?
     pub running: bool,
     /// counter
     pub counter: u8,
+    pub do_print: bool,
 }
 
 /**
