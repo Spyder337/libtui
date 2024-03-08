@@ -38,7 +38,7 @@ impl App {
 /// Implement the [`Renderer`] trait for &[`App`]. This makes it so that calls to
 /// &self will have access to the render function. The most important is the 
 /// Tui::draw function which renders the widgets.
-impl Renderer for &App {
+impl Renderer for App {
     fn render(&self, frame: &mut ratatui::prelude::Frame<'_>) {
         frame.render_widget(
             Paragraph::new(format!(
