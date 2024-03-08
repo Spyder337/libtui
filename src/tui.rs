@@ -39,7 +39,7 @@ impl<B: Backend> Tui<B> {
     ///
     /// [`Draw`]: ratatui::Terminal::draw
     /// [`rendering`]: crate::ui:render
-    pub fn draw(&mut self, app: &mut impl Renderer) -> AppResult<()> {
+    pub fn draw(&mut self, app: impl Renderer) -> AppResult<()> {
         self.terminal
             .draw(|frame: &mut ratatui::prelude::Frame<'_>| app.render(frame))?;
         Ok(())

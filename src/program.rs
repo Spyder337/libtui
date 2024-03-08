@@ -1,16 +1,15 @@
+use std::io::stderr;
 
-use std::io::{ stderr, Stderr };
 
-
-use crate::{ AppResult, Executable, KeyEventHandler, Renderer };
-use crate::{ Program, Tui };
+use crate::{ AppResult, CrosstermBackend, Event, Executable, KeyEventHandler, Renderer, Term };
+use crate::Program;
 
 
 use ratatui::Terminal;
 use serde::Serialize;
 use serde_json::json;
 
-impl<T: Renderer + KeyEventHandler + Executable + Serialize> Program<T> {
+impl<T: Renderer + KeyEventHandler + Executable + Serialize + Copy> Program<T> {
     /**
     Constructs a new instance of [`Program`].
     */
@@ -19,24 +18,34 @@ impl<T: Renderer + KeyEventHandler + Executable + Serialize> Program<T> {
     }
 
     pub async fn run(&mut self) -> AppResult<()> {
-        type Term = Terminal<ratatui::backend::CrosstermBackend<Stderr>>;
-        let backend = ratatui::backend::CrosstermBackend::new(stderr());
-        let terminal = Term::new(backend)?;
+        let backend = CrosstermBackend::new(stderr());
+        let terminal = Terminal::new(backend)?;
         let events = crate::EventHandler::new(250);
-        let mut tui = Tui::new(terminal, events);
+        let mut tui = Term::new(terminal, events);
+
         tui.init()?;
 
-        let res = self.app.run(&mut tui).await;
+        
+        loop {
+            if self.app.is_running() {
+                break;
+            }
+
+            tui.draw(self.app)?;
+
+            match tui.events.next().await? {
+                Event::Tick => self.app.tick(),
+                Event::Key(ke) => self.app.handle_key_event(ke)?,
+                Event::Mouse(_) => (),
+                Event::Resize(_, _) => (),
+            }
+        }
 
         tui.exit()?;
 
-        if let Ok(do_print) = res {
-            if do_print {
-                println!("{}", json!(self.app));
-            }
-        } else if let Err(err) = res {
-            println!("{err:?}");
-        }
+        if self.app.can_print() {
+            println!("{}", json!(self.app));
+        } 
 
         Ok(())
     }

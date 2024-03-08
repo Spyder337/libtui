@@ -11,8 +11,9 @@ pub mod program;
 pub mod tui;
 
 /// Application result type.
-pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
+pub type AppResult<T> = Result<T, Box<dyn error::Error>>;
 pub type CrosstermBackend = ratatui::backend::CrosstermBackend<std::io::Stderr>;
+pub type Term = Tui<CrosstermBackend>;
 
 /// Terminal events.
 #[derive(Clone, Copy, Debug)]
@@ -40,7 +41,7 @@ pub struct EventHandler {
 }
 
 pub trait Renderer {
-    fn render(&mut self, frame: &mut ratatui::prelude::Frame<'_>);
+    fn render(&self, frame: &mut ratatui::prelude::Frame<'_>);
 }
 
 pub trait KeyEventHandler {
@@ -51,10 +52,7 @@ pub trait Executable {
     fn is_running(&self) -> bool;
     fn quit(&mut self);
     fn tick(&self) {}
-    fn run(
-        &mut self,
-        tui: &mut Tui<CrosstermBackend>
-    ) -> impl std::future::Future<Output = AppResult<bool>> + Send;
+    fn can_print(&self) -> bool { false }
 }
 
 /// Default counter application example.

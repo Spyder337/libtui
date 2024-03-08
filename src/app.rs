@@ -2,7 +2,7 @@ use crossterm::event::{KeyCode, KeyEvent as CrosstermKeyEvent, KeyModifiers};
 use ratatui::{layout::Alignment, style::{Color, Style}, widgets::{Block, BorderType, Paragraph}
 };
 
-use crate::{App, CrosstermBackend, Event, Tui};
+use crate::App;
 
 use super::{AppResult, Executable, KeyEventHandler, Renderer};
 
@@ -35,8 +35,11 @@ impl App {
     }
 }
 
-impl Renderer for App {
-    fn render(&mut self, frame: &mut ratatui::prelude::Frame<'_>) {
+/// Implement the [`Renderer`] trait for &[`App`]. This makes it so that calls to
+/// &self will have access to the render function. The most important is the 
+/// Tui::draw function which renders the widgets.
+impl Renderer for &App {
+    fn render(&self, frame: &mut ratatui::prelude::Frame<'_>) {
         frame.render_widget(
             Paragraph::new(format!(
                 "This is a tui template.\n\
@@ -85,27 +88,13 @@ impl KeyEventHandler for App {
     }
 }
 
-impl Executable for App {
+impl Executable for App{
     /// Handles the tick event of the terminal.
     fn tick(&self) {}
 
     /// Is the app running?
     fn is_running(&self) -> bool {
         self.running
-    }
-
-    async fn run(&mut self, tui: &mut Tui<CrosstermBackend>) -> AppResult<bool>{
-        while self.is_running() {
-            tui.draw(self)?;
-
-            match tui.events.next().await? {
-                Event::Tick => self.tick(),
-                Event::Key(ke) => self.handle_key_event(ke)?,
-                Event::Mouse(_) => (),
-                Event::Resize(_, _) => (),
-            }
-        }
-        Ok(self.do_print)
     }
     
     /// Set running to false to quit the application.
