@@ -47,6 +47,7 @@ pub trait KeyEventHandler {
 
 pub trait Executable {
     fn is_running(&self) -> bool;
+    fn quit(&mut self);
     fn tick(&self) {}
 }
 

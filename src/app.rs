@@ -23,12 +23,7 @@ impl App {
     pub fn new() -> Self {
         Self::default()
     }
-
-    /// Set running to false to quit the application.
-    pub fn quit(&mut self) {
-        self.running = false;
-    }
-
+    
     pub fn increment_counter(&mut self) {
         if let Some(res) = self.counter.checked_add(1) {
             self.counter = res;
@@ -96,7 +91,13 @@ impl Executable for App {
     /// Handles the tick event of the terminal.
     fn tick(&self) {}
 
+    /// Is the app running?
     fn is_running(&self) -> bool {
         self.running
+    }
+    
+    /// Set running to false to quit the application.
+    fn quit(&mut self) {
+        self.running = false;
     }
 }
