@@ -1,20 +1,21 @@
+use std::cell::RefCell;
 use std::io::stderr;
 
-
-use crate::{ AppResult, CrosstermBackend, Event, Executable, KeyEventHandler, Renderer, Term };
 use crate::Program;
-
+use crate::{AppResult, CrosstermBackend, Event, Executable, KeyEventHandler, Renderer, Term};
 
 use ratatui::Terminal;
 use serde::Serialize;
 use serde_json::json;
 
-impl<T: Renderer + KeyEventHandler + Executable + Serialize + Copy> Program<T> {
+impl<T: Renderer + KeyEventHandler + Executable + Serialize> Program<T> {
     /**
     Constructs a new instance of [`Program`].
     */
     pub fn new(app: T) -> Self {
-        Self { app }
+        Self {
+            app: RefCell::new(app),
+        }
     }
 
     pub async fn run(&mut self) -> AppResult<()> {
@@ -25,17 +26,16 @@ impl<T: Renderer + KeyEventHandler + Executable + Serialize + Copy> Program<T> {
 
         tui.init()?;
 
-        
         loop {
-            if self.app.is_running() {
+            if self.app.borrow().is_running() {
                 break;
             }
 
-            tui.draw(self.app)?;
+            tui.draw(self.app.borrow())?;
 
             match tui.events.next().await? {
-                Event::Tick => self.app.tick(),
-                Event::Key(ke) => self.app.handle_key_event(ke)?,
+                Event::Tick => self.app.borrow().tick(),
+                Event::Key(ke) => self.app.borrow_mut().handle_key_event(ke)?,
                 Event::Mouse(_) => (),
                 Event::Resize(_, _) => (),
             }
@@ -43,9 +43,9 @@ impl<T: Renderer + KeyEventHandler + Executable + Serialize + Copy> Program<T> {
 
         tui.exit()?;
 
-        if self.app.can_print() {
+        if self.app.borrow().can_print() {
             println!("{}", json!(self.app));
-        } 
+        }
 
         Ok(())
     }

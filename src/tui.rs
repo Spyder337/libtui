@@ -4,6 +4,7 @@ use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use crossterm::terminal::{self, EnterAlternateScreen, LeaveAlternateScreen};
 use ratatui::backend::Backend;
 use ratatui::Terminal;
+use std::cell::Ref;
 use std::io;
 use std::panic;
 
@@ -39,7 +40,7 @@ impl<B: Backend> Tui<B> {
     ///
     /// [`Draw`]: ratatui::Terminal::draw
     /// [`rendering`]: crate::ui:render
-    pub fn draw(&mut self, app: impl Renderer) -> AppResult<()> {
+    pub fn draw<T: Renderer>(&mut self, app: Ref<T>) -> AppResult<()> {
         self.terminal
             .draw(|frame: &mut ratatui::prelude::Frame<'_>| app.render(frame))?;
         Ok(())

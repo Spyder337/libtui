@@ -1,8 +1,8 @@
-use std::error;
+use std::{cell::RefCell, error};
 
-use crossterm::event::{ KeyEvent as CrosstermKeyEvent, MouseEvent };
-use ratatui::{ backend::Backend, Terminal };
-use serde::{ Deserialize, Serialize };
+use crossterm::event::{KeyEvent as CrosstermKeyEvent, MouseEvent};
+use ratatui::{backend::Backend, Terminal};
+use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 
 pub mod app;
@@ -52,12 +52,14 @@ pub trait Executable {
     fn is_running(&self) -> bool;
     fn quit(&mut self);
     fn tick(&self) {}
-    fn can_print(&self) -> bool { false }
+    fn can_print(&self) -> bool {
+        false
+    }
 }
 
 /// Default counter application example.
 /// Just plug it into a [`Program`] and run it.
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct App {
     /// Is the application running?
     pub running: bool,
@@ -71,8 +73,11 @@ Default example of a program using the [`ratatui`] library.
 It contains an [`App`] struct that contains the data for the application
 and also implements the [`Renderer`], [`KeyEventHandler`], [`Executable`] traits.
 */
-pub struct Program<T: Renderer + KeyEventHandler + Executable + Clone> {
-    app: T,
+pub struct Program<T: Renderer + KeyEventHandler + Executable + Serialize> {
+    /// Represents the program state.
+    /// T also has ties to functions that allow a program to run.
+    ///
+    app: RefCell<T>,
 }
 
 /// Representation of a terminal user interface.
